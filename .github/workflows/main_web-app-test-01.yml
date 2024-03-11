@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy PHP app to Azure Web App - Web-app-test-01
+name: Build and deploy ASP app to Azure Web App - web-app-test-01
 
 on:
   push:
@@ -11,37 +11,31 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
+      - name: Setup MSBuild path
+        uses: microsoft/setup-msbuild@v1.0.2
 
-      - name: Check if composer.json exists
-        id: check_files
-        uses: andstor/file-existence-action@v1
-        with:
-          files: 'composer.json'
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
 
-      - name: Run composer install if composer.json exists
-        if: steps.check_files.outputs.files_exists == 'true'
-        run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
+      - name: Restore NuGet packages
+        run: nuget restore
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      - name: Publish to folder
+        run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
-          name: php-app
-          path: release.zip
+          name: ASP-app
+          path: '/published/**'
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build
     environment:
       name: 'Production'
@@ -53,23 +47,20 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
-          name: php-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
+          name: ASP-app
       
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CD6E96EB1F5A445D967DE6A06A2474CF }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_CE34950CAD224ABFAA65038F8AA24135 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_71E0672608C248FCAA9FDB760FFF8E60 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_9D4C764A3E79494E81C2EBAE6A1094FE }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_67170E8022194BA7A18136BB8AC7FAA6 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_03ADBDEC8A9647E6BAEE03C739ABD645 }}
 
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
         with:
-          app-name: 'Web-app-test-01'
+          app-name: 'web-app-test-01'
           slot-name: 'Production'
           package: .
           
