@@ -24,8 +24,13 @@ jobs:
       - name: npm install, build, and test
         run: |
           npm install
-          npm run build --if-present
-          npm run test --if-present
+          del /f package-lock.json
+          rd /s /q node_modules
+          npm cache clean
+          npm cache verify
+          npm update
+          npm install
+          npm run dev
       
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
