@@ -24,7 +24,12 @@ jobs:
       - name: npm install, build, and test
         run: |
           npm install
-          vsts-npm-auth -config .npmrc
+          del /f package-lock.json
+          rd /s /q node_modules
+          npm cache clean
+          npm cache verify
+          npm update
+          npm install
           npm run dev
       
       - name: Upload artifact for deployment job
@@ -57,9 +62,9 @@ jobs:
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
-        id: deploy-to-webapp
+        id: deploy-to-web app
         with:
           app-name: 'web-app-test-01'
           slot-name: 'Production'
-          package: .
+          package:
           
