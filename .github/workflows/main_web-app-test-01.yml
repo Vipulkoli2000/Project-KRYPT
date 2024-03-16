@@ -24,7 +24,6 @@ jobs:
       - name: npm install, build, and test
         run: |
           npm install
-          rd /s /q node_modules
           npm cache clean
           npm cache verify
           npm update
